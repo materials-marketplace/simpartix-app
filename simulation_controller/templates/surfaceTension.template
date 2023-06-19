@@ -1,0 +1,14 @@
+# =============================================
+#  SPH surface tension data file for SimPARTIX
+# =============================================
+
+# For the single phase model use:
+
+#Keyword                Fluid                         Tension [N/m]
+SurfaceTension          0                             1.77
+
+#Keyword                Fluid                         Coefficient [N/(m K)]
+MarangoniCoefficient    0                             -3.2e-3
+
+#Keyword                Fluid          Wall           Contact Angle [degrees]
+ContactAngle            0              1              60.0

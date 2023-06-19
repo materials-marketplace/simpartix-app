@@ -1,0 +1,63 @@
+# ======================================
+#  SPH material data file for SimPARTIX
+# ======================================
+
+
+#### General properties ####
+
+type                             0              1              # material id
+particleSpacing                  1.0e-6         1.0e-6         # default spacing of particles [m]
+smoothingLength                  1.5e-6         1.5e-6         # kernel smoothing length [m]
+density                          7.676e3        7.676e3        # reference density [kg/m^3]
+viscosity                        6.0e-3         0.0            # dynamic viscosity [Pa s]
+
+#### Equation of state parameters ####
+
+speedOfSound                     5.0e2          5.0e2          # [m/s]
+equationOfStateGamma             7.0            7.0            # isentropic exponent [-]
+
+#### Artificial viscosity parameters ####
+
+artificialViscosityAlpha         0.01           0.01           # strength parameter [-]
+artificialViscosityBeta          0.02           0.02           # strength parameter [-]
+
+#### Artificial stress parameters ####
+
+isArtificialStress               1              1              # artificial stress can prevent tensile instability
+artificialStressEpsilon          0.2            0.2            # influence scaling factor; typically 0.2 [-]
+artificialStressN                4.0            4.0            # exponent for locality of influence; typically 4.0 [-]
+
+#### Thermal parameters ####
+
+isThermoconducting               1              1              # include in thermal conduction calculations
+hasConstantTemperature           0              1              # can be used to define sources and sinks
+temperature                      3.0e2          3.0e2          # initial (or constant) temperature [K]
+thermalConductivity              2.93e1         2.93e1         # thermal conductivity [W/(m K)]
+heatCapacity                     6.25e2         6.25e2         # specific heat capacity [J/(kg K)]
+absorptionCoefficient            4.0e5          0.0            # radiation absorption coefficient [1/m]
+isRadiation                      1              0              # activates Stefan-Boltzmann radiation
+emissivity                       0.5            0.0            # radiation emissivity [-]
+referenceTemperatureRadiation    3.0e2          0.0            # temperature reference for radiation [K]
+isHeatTransfer                   1              0              # activates surface heat transfer
+heatTransferCoefficient          2.5e1          0.0            # heat transfer coefficient [W/(m^2 K)]
+referenceTemperatureTransfer     3.0e2          0.0            # temperature reference for heat transfer [K]
+isVaporizationRecoil             0              0              # activates vaporization recoil pressure
+isVaporizationShearStress        0              0              # activates vaporization shear stress
+molarMass                        0.0            0.0            # molar mass [kg/mol]
+latentHeat                       2.7e5          0.0            # specific latent heat of melting [J/kg]
+latentHeatVaporization           0.0            0.0            # specific latent heat of vaporization [J/kg]
+vaporizationTemperature          1.0e99         0.0            # vaporization temperature [K]
+condensationTemperature          1.9e98         0.0            # condensation temperature [K]
+liquidusTemperature              1.609e3        0.0            # liquidus temperature [K]
+solidusTemperature               1.533e3        0.0            # solidus temperature [K]
+solidificationTemperatureOffset  0.0            0.0            # temperature difference between melting and solidification [K]
+isThermoviscosity                1              0              # activates temperature-dependent viscosity
+activationEnergy                 0.0            0.0            # activation Energy [J/mol]
+solidViscosity                   1.0e-2         0.0            # dynamic viscosity below solidus temperature [Pa s]
+gasViscosity                     0.0            0.0            # dynamic viscosity of gas phase [Pa s]
+gasDensity                       0.0            0.0            # density of gas phase [kg/m^3]
+isFixedBelowSolidusTemperature   1              0              # fixes the particles below solidus temperature spatially
+
+#### Particle constraints ####
+
+isSpatiallyFixed                 0              1              # fixes the particles spatially

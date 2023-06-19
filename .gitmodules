@@ -1,0 +1,3 @@
+[submodule "simpartix"]
+	path = simpartix
+	url = git@gitlab.cc-asp.fraunhofer.de:bie/simpartix.git

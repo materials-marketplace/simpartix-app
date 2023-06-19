@@ -1,0 +1,96 @@
+# ======================================
+#  SPH configuration file for SimPARTIX
+# ======================================
+
+
+#### Compressibility ####
+
+isIncompressible = true                  # use implicit scheme to ensure incompressibility
+
+#### Incompressibility solver settings ####
+
+implicitSolverIterationLimitISPH = -1    # maximum number of iterations for implicit solver; system size twice if set to -1
+implicitSolverMaximumErrorISPH = 1.0e-6  # tolerance for implicit solver [-]
+relaxationCoefficientISPH = 0.1          # pressure Poisson equation relaxation coefficient [-]
+
+#### Time integrator ####
+
+isTimeIntegratorImplicitViscosity = false # use implicit viscosity solver as time integrator
+isTimeIntegratorImplicitConduction = true # use implicit heat conduction solver as time integrator
+
+#### Implicit viscosity solver settings ####
+
+implicitSolverIterationLimit = -1        # maximum number of iterations for implicit solver; system size twice if set to -1
+implicitSolverMaximumError = 1.0e-6      # tolerance for implicit solver [-]
+
+#### Implicit conduction solver settings ####
+
+implicitSolverIterationLimitConduction = -1           # maximum number of iterations for implicit conduction solver; system size twice if set to -1
+implicitSolverMaximumErrorConduction = 1.0e-6         # tolerance for implicit conduction solver [-]
+
+#### Binary I/O options ####
+
+isReadSmoothingLength = false            # read smoothing length from file instead of using value from material data file
+isWriteSmoothingLength = true            # write smoothing length to file
+isReadDensity = false                    # read density from file instead of using value from material data file
+isWriteDensity = true                    # write density to file
+isReadTemperature = false                # read temperature from file instead of using value from material data file
+isWriteTemperature = true                # write temperature to file
+isReadStateOfMatter = false              # read state of matter from file instead of calculating value based on temperature
+isWriteStateOfMatter = true              # write state of matter to file
+isWritePressure = false                  # write pressure to file
+isWriteRateOfStrain = false              # write rate of strain to file
+isWriteViscosity = true                  # write viscosity to file
+isWriteSurface = false                   # write boundary particle flag and surface normal to file
+isWriteRenormalization = false           # write renormalization tensor and its minimum eigenvalue to file
+
+#### Density calculation model ####
+
+isDensitySum = false                     # use summation formalism
+isDensityContinuity = true               # use continuity equation
+isDensityDiffusionArtificial = true      # Molteni (2009)
+densityDiffusionCoefficient = 0.1        # coefficient for artificial density diffusion [-]
+shepardIncrement = -1                    # periodically re-initialize density after ... time steps
+                                         # 1 = on each step, -1 = never
+
+#### Viscosity models ####
+
+isViscosityCleary = true                 # Cleary (1998)
+isViscositySigalotti = false             # Sigalotti (2003)
+isViscosityArtificial = false            # Gingold & Monaghan (1983)
+isViscosityArtColagrossi = false         # Colagrossi (2003)
+
+#### SPH kernel function ####
+
+isKernelCubicSpline = false              # cubic spline kernel function
+isKernelQuinticSpline = false            # quintic spline kernel function
+isKernelQuinticWendland = true           # quintic Wendland kernel function
+isKernelGaussian = false                 # Gaussian kernel function with compact support
+
+#### XSPH mode ####
+
+isXSPH = true                            # use XSPH stabilization
+XSPHEpsilon = 0.25                       # XSPH parameter [-]
+
+#### Boundary conditions ####
+
+isBoundaryConditionAdami = true          # activate boundary condition (Adami 2012)
+
+#### Particle shifting model ####
+
+isParticleShifting = true                # use particle shifting correction (Sun 2017)
+
+#### Thermal conductivity ####
+
+isThermalConductive = true               # activate thermal conductivity
+readLaserFromFile = true                 # read laser parameters from file
+laserFilename = input/laser.dat          # file to read laser parameters from
+
+#### Surface tension model ####
+
+isSurfaceTensionSinglePhase = true           # single phase surface tension model (Bierwisch 2018)
+
+#### Material data ####
+
+materialFilename = input/sphMaterialProperties.csv     # material data
+surfaceTensionFilename = input/surfaceTension.dat      # material data with surface tension properties

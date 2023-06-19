@@ -1,0 +1,261 @@
+---
+openapi: 3.0.0
+
+info:
+    title: SimPARTIX MarketPlace app
+    description: MarketPlace app for the SimPARTIX simulation software
+    version: 1.0.5
+    x-api-version: 0.3.0
+    x-products:
+        - name: Monthly
+          productId:
+servers:
+    - url: https://simpartix.materials-data.space
+
+paths:
+  # Administrative paths
+    /heartbeat:
+        get:
+            description: Returns a heartbeat
+            operationId: heartbeat
+            responses:
+                '200':
+                    description: Success
+
+  # Transformation app paths
+    /transformations:
+        post:
+            description: Initialize a Transformation
+            operationId: newTransformation
+            requestBody:
+                required: true
+                content:
+                    application/json:
+                        schema:
+                            $ref: '#/components/schemas/TransformationConfig'
+            responses:
+                '200':
+                    description: Success
+                    content:
+                        resourceId:
+                            schema:
+                                type: string
+                                example: 3e22541c-a95e-4443-8cdc-0866171d343b
+                '400':
+                    description: Bad Request
+                    content:
+                        resourceId:
+                            schema:
+                                type: string
+                                example: Wrong configuration input
+
+    /transformations/{transformation_id}/state:
+        get:
+            description: Get the state of a Transformation
+            operationId: getTransformationState
+            parameters:
+                - in: path
+                  name: transformation_id
+                  schema:
+                      type: string
+                  required: true
+            responses:
+                '200':
+                    description: Success
+                    content:
+                        state:
+                            schema:
+                                type: string
+                                example: running
+                '404':
+                    description: Not found
+                    content:
+                        resourceId:
+                            schema:
+                                type: string
+                                example: Simulation Not found
+                '400':
+                    description: Bad Request
+                    content:
+                        resourceId:
+                            schema:
+                                type: string
+                                example: Unexpected error
+
+    /transformations/{transformation_id}:
+        delete:
+            description: Delete the transformation
+            operationId: deleteTransformation
+            parameters:
+                - in: path
+                  name: transformation_id
+                  schema:
+                      type: string
+                  required: true
+            responses:
+                '200':
+                    description: Success
+                    content:
+                        status:
+                            schema:
+                                type: string
+                                example: Deleted successfully
+                '404':
+                    description: Not found
+                    content:
+                        resourceId:
+                            schema:
+                                type: string
+                                example: Simulation Not found
+                '400':
+                    description: Bad Request
+                    content:
+                        resourceId:
+                            schema:
+                                type: string
+                                example: Simulation is in progress
+        patch:
+            description: Update the transformation state
+            operationId: updateTransformation
+            parameters:
+                - in: path
+                  name: transformation_id
+                  schema:
+                      type: string
+                  required: true
+            requestBody:
+                required: true
+                content:
+                    application/json:
+                        schema:
+                            $ref: '#/components/schemas/TransformationUpdate'
+            responses:
+                '200':
+                    description: Success
+                    content:
+                        status:
+                            schema:
+                                type: string
+                                example: Stopped successfully
+    /:
+        get:
+            description: Get the List of Simulations
+            operationId: getTransformationList
+            responses:
+                '200':
+                    description: Success
+                    content:
+                        application/json:
+                            schema:
+                                type: object
+                                properties:
+                                    items:
+                                        type: array
+                                        example: [SimulationID-1, Simulation-2, '...']
+
+  # dataSource endpoints
+    /datasets:
+        get:
+            description: Get the simulation results (DLite json)
+            operationId: getDataset
+            parameters:
+                - in: query
+                  name: dataset_name
+                  schema:
+                      type: string
+                  required: true
+            responses:
+                '200':
+                    description: Success
+                    content:
+                        '*/*':
+                            schema:
+                                type: object
+                '404':
+                    description: Not found
+                    content:
+                        resourceId:
+                            schema:
+                                type: string
+                                example: Simulation not found
+                '400':
+                    description: Bad Request
+                    content:
+                        resourceId:
+                            schema:
+                                type: string
+                                example: Simulation is in progress
+
+    /mappings:
+        get:
+            description: Get the list semantic mappings
+            operationId: listSemanticMappings
+            responses:
+                '200':
+                    description: Success
+                    content:
+                        '*/*':
+                            schema:
+                                type: object
+
+    /mappings/{semantic_mapping_id}:
+        get:
+            description: Get a specific semantic mapping set
+            operationId: getSemanticMapping
+            parameters:
+                - in: path
+                  name: semantic_mapping_id
+                  schema:
+                      type: string
+            responses:
+                '200':
+                    description: Success
+                    content:
+                        '*/*':
+                            schema:
+                                type: object
+                '404':
+                    description: Not found
+                    content:
+                        resourceId:
+                            schema:
+                                type: string
+                                example: Semantic mapping Not found
+
+components:
+    schemas:
+        TransformationConfig:
+            title: TransformationConfig
+            required:
+                - Configuration
+            type: object
+            properties:
+                laserStrength:
+                    title: laserStrength
+                    type: integer
+                laserSpeed:
+                    title: laserSpeed
+                    type: number
+                configuration:
+                    title: Configuration
+                    type: integer
+                sphereDiameter:
+                    title: sphereDiameter
+                    type: number
+                phi:
+                    title: phi
+                    type: number
+                powderLayerHeight:
+                    title: powderLayerHeight
+                    type: number
+            description: Transformation data model
+        TransformationUpdate:
+            title: TransformationUpdate
+            required:
+                - state
+            type: object
+            properties:
+                state:
+                    title: state
+                    type: string
+            description: Transformation update model

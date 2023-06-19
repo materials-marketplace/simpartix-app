@@ -1,0 +1,61 @@
+# =========================================
+#  Global configuration file for SimPARTIX
+# =========================================
+
+
+#### Time settings ####
+
+isTimestepAdaptive = true                      # use adaptive time stepping
+startTime = 0.0                                # starting time [s]
+endTime = {simulationTime:1.04e}                            # ending time [s]
+outputTime = {outputInterval:1.04e}                           # interval of output [s]
+
+#### Boundaries ####
+
+boxLength.x = {spreadX}                            # box length (x-direction) [m]
+boxLength.y = 1.0e0                            # box length (y-direction) [m]
+boxLength.z = {spreadZ}                           # box length (z-direction) [m]
+isPeriodic.x = false                           # use periodic boundary conditions in x-direction
+isPeriodic.y = false                           # use periodic boundary conditions in y-direction
+isPeriodic.z = false                           # use periodic boundary conditions in z-direction
+is2d = true                                    # use 2D mode
+
+#### Checks ####
+
+isCheckParticlePositions = false               # checks whether two particles are exactly at the same position
+
+#### Loads ####
+
+gravity.x = 0.0                                # gravity vector (x-component) [m/s^2]
+gravity.y = 0.0                                # gravity vector (y-component) [m/s^2]
+gravity.z = -9.81e0                            # gravity vector (z-component) [m/s^2]
+
+#### Binary input ####
+
+inputFrame = 0                                 # input frame number to (re-)start from; first frame: 0; last frame: -1
+h5PartInputFilename = input/startconf.h5part   # general input file in H5Part format
+
+#### Binary output ####
+
+h5PartOutputFilename = output/output.h5part    # general output file in H5Part format
+
+#### ASCII output ####
+
+outputDirectory = output/                      # general output directory for user (ASCII) output
+
+#### Binary I/O options ###
+
+isReadMovementType = false                     # read movement type from input file instead of using value from material data file
+isWriteMovementType = false                    # write movement type to file
+isReadGroup = true                             # read group identifier from file
+isWriteGroup = true                            # write group identifier to file
+isReadVelocity = false                         # read velocity from file
+isWriteVelocity = true                         # write velocity to file
+isWriteForce = false                           # write force to file
+isWriteCore = false                            # write computing core to file (parallel mode only)
+
+#### Parallelization options ####
+
+cores.x = 8                                    # number of computing cores in x-direction
+cores.y = 1                                    # number of computing cores in y-direction
+cores.z = 1                                    # number of computing cores in z-direction

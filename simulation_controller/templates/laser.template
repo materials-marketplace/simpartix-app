@@ -1,0 +1,5 @@
+#time [s]  #power [W]  #sigma [m]  #x0 [m]   #y0 [m]
+0.0        {laserPower:1.02e}       {varianceLaser:1.02e}     -{laserTravelDistance:1.03e}    0.0
+{simulationTime}     {laserPower:1.02e}       {varianceLaser:1.02e}      {laserTravelDistance:1.03e}    0.0
+{simulationTime}     0.0         {varianceLaser:1.02e}      0.0       0.0
+1.0e0      0.0         {varianceLaser:1.02e}      0.0       0.0
