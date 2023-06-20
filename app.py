@@ -11,8 +11,9 @@ from marketplace_standard_app_api.models.transformation import (
     TransformationUpdateModel,
     TransformationUpdateResponse,
 )
+from marketplace_standard_app_api.routers import object_storage
 
-from models.transformation import DatasetQuery, TransformationInput
+from models.transformation import TransformationInput
 from simulation_controller.simulation_manager import (
     SimulationManager,
     mappings,
@@ -167,11 +168,12 @@ def delete_simulation(transformation_id: TransformationId):
     operation_id="getDataset",
     responses={200: {"content": {"vnd.sintef.dlite+json"}}},
 )
-def get_results(payload: DatasetQuery, response: Response):
-    transformation_id = payload.collection_name
-    json_payload = simulation_manager.get_simulation_output(
-        str(transformation_id)
-    )
+def get_results(
+    collection_name: object_storage.CollectionName,
+    dataset_name: object_storage.DatasetName,
+    response: Response,
+):
+    json_payload = simulation_manager.get_simulation_output(str(dataset_name))
     response.headers["x-semantic-mappings"] = "SimpartixOutput"
     return json_payload
 

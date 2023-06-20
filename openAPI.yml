@@ -13,156 +13,164 @@ servers:
     - url: https://simpartix.materials-data.space
 
 paths:
-  # Administrative paths
     /heartbeat:
         get:
-            description: Returns a heartbeat
+            summary: Check if app is alive
             operationId: heartbeat
             responses:
                 '200':
-                    description: Success
-
-  # Transformation app paths
+                    description: Successful Response
+                    content:
+                        application/json:
+                            schema: {}
     /transformations:
         get:
-            description: Get the List of Simulations
+            summary: Get all simulations.
             operationId: getTransformationList
             responses:
                 '200':
-                    description: Success
+                    description: Successful Response
                     content:
                         application/json:
                             schema:
-                                type: object
-                                properties:
-                                    items:
-                                        type: array
-                                        example: [SimulationID-1, Simulation-2, '...']
+                                $ref: '#/components/schemas/TransformationListResponse'
         post:
-            description: Initialize a Transformation
+            summary: Create a new transformation
             operationId: newTransformation
             requestBody:
-                required: true
                 content:
                     application/json:
                         schema:
-                            $ref: '#/components/schemas/TransformationConfig'
+                            $ref: '#/components/schemas/TransformationInput'
+                required: true
             responses:
                 '200':
-                    description: Success
+                    description: Successful Response
                     content:
-                        resourceId:
+                        application/json:
                             schema:
-                                type: string
-                                example: 3e22541c-a95e-4443-8cdc-0866171d343b
-                '400':
-                    description: Bad Request
+                                $ref: '#/components/schemas/TransformationCreateResponse'
+                '422':
+                    description: Validation Error
                     content:
-                        resourceId:
+                        application/json:
                             schema:
-                                type: string
-                                example: Wrong configuration input
-
-    /transformations/{transformation_id}/state:
-        get:
-            description: Get the state of a Transformation
-            operationId: getTransformationState
-            parameters:
-                - in: path
-                  name: transformation_id
-                  schema:
-                      type: string
-                  required: true
-            responses:
-                '200':
-                    description: Success
-                    content:
-                        state:
-                            schema:
-                                type: string
-                                example: running
-                '404':
-                    description: Not found
-                    content:
-                        resourceId:
-                            schema:
-                                type: string
-                                example: Simulation Not found
-                '400':
-                    description: Bad Request
-                    content:
-                        resourceId:
-                            schema:
-                                type: string
-                                example: Unexpected error
-
+                                $ref: '#/components/schemas/HTTPValidationError'
     /transformations/{transformation_id}:
         delete:
-            description: Delete the transformation
+            summary: Delete a transformation
             operationId: deleteTransformation
             parameters:
-                - in: path
-                  name: transformation_id
+                - required: true
                   schema:
+                      title: Transformation Id
                       type: string
-                  required: true
+                      format: uuid4
+                  name: transformation_id
+                  in: path
             responses:
                 '200':
-                    description: Success
+                    description: Successful Response
                     content:
-                        status:
-                            schema:
-                                type: string
-                                example: Deleted successfully
-                '404':
-                    description: Not found
+                        application/json:
+                            schema: {}
+                '422':
+                    description: Validation Error
                     content:
-                        resourceId:
+                        application/json:
                             schema:
-                                type: string
-                                example: Simulation Not found
-                '400':
-                    description: Bad Request
-                    content:
-                        resourceId:
-                            schema:
-                                type: string
-                                example: Simulation is in progress
+                                $ref: '#/components/schemas/HTTPValidationError'
         patch:
-            description: Update the transformation state
+            summary: Update the state of the simulation.
             operationId: updateTransformation
             parameters:
-                - in: path
-                  name: transformation_id
+                - required: true
                   schema:
+                      title: Transformation Id
                       type: string
-                  required: true
+                      format: uuid4
+                  name: transformation_id
+                  in: path
             requestBody:
-                required: true
                 content:
                     application/json:
                         schema:
-                            $ref: '#/components/schemas/TransformationUpdate'
+                            $ref: '#/components/schemas/TransformationUpdateModel'
+                required: true
             responses:
                 '200':
-                    description: Success
+                    description: Successful Response
                     content:
-                        status:
+                        application/json:
                             schema:
-                                type: string
-                                example: Stopped successfully
+                                $ref: '#/components/schemas/TransformationUpdateResponse'
+                '400':
+                    description: Error executing update operation
+                '404':
+                    description: Not Found.
+                '409':
+                    description: Requested state not available
+                '422':
+                    description: Validation Error
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/HTTPValidationError'
+    /transformations/{transformation_id}/state:
+        get:
+            summary: Get the state of the simulation.
+            description: |-
+                Get the state of a simulation.
 
-  # dataSource endpoints
+                Args:
+                    transformation_id (TransformationId): ID of the simulation
+
+                Returns:
+                    TransformationStateResponse: The state of the simulation.
+            operationId: getTransformationState
+            parameters:
+                - required: true
+                  schema:
+                      title: Transformation Id
+                      type: string
+                      format: uuid4
+                  name: transformation_id
+                  in: path
+            responses:
+                '200':
+                    description: Successful Response
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/TransformationStateResponse'
+                '404':
+                    description: Unknown simulation
+                '422':
+                    description: Validation Error
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/HTTPValidationError'
     /results:
         get:
             summary: Get a simulation's result
             operationId: getDataset
-            requestBody:
-                content:
-                    application/json:
-                        schema:
-                            $ref: '#/components/schemas/DatasetQuery'
-                required: true
+            parameters:
+                - required: true
+                  schema:
+                      title: Collection Name
+                      maxLength: 255
+                      minLength: 1
+                      type: string
+                  name: collection_name
+                  in: query
+                - required: true
+                  schema:
+                      title: Dataset Name
+                      minLength: 1
+                      type: string
+                  name: dataset_name
+                  in: query
             responses:
                 '200':
                     description: Successful Response
@@ -209,22 +217,6 @@ paths:
                                 $ref: '#/components/schemas/HTTPValidationError'
 components:
     schemas:
-        DatasetQuery:
-            title: DatasetQuery
-            required:
-                - collection_name
-                - dataset_name
-            type: object
-            properties:
-                collection_name:
-                    title: Collection Name
-                    maxLength: 255
-                    minLength: 1
-                    type: string
-                dataset_name:
-                    title: Dataset Name
-                    minLength: 1
-                    type: string
         HTTPValidationError:
             title: HTTPValidationError
             type: object
