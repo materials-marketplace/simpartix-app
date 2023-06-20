@@ -1,6 +1,12 @@
 """Definition of the additional required data models."""
 
+from marketplace_standard_app_api.routers import object_storage
 from pydantic import BaseModel, validator
+
+
+class DatasetQuery(BaseModel):
+    collection_name: object_storage.CollectionName
+    dataset_name: object_storage.DatasetName
 
 
 class TransformationInput(BaseModel):

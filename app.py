@@ -12,7 +12,7 @@ from marketplace_standard_app_api.models.transformation import (
     TransformationUpdateResponse,
 )
 
-from models.transformation import TransformationInput
+from models.transformation import DatasetQuery, TransformationInput
 from simulation_controller.simulation_manager import (
     SimulationManager,
     mappings,
@@ -162,12 +162,13 @@ def delete_simulation(transformation_id: TransformationId):
 
 
 @app.get(
-    "/datasets/{transformation_id}",
+    "/results",
     summary="Get a simulation's result",
     operation_id="getDataset",
     responses={200: {"content": {"vnd.sintef.dlite+json"}}},
 )
-def get_results(transformation_id: TransformationId, response: Response):
+def get_results(payload: DatasetQuery, response: Response):
+    transformation_id = payload.collection_name
     json_payload = simulation_manager.get_simulation_output(
         str(transformation_id)
     )

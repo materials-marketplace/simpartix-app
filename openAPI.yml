@@ -24,6 +24,20 @@ paths:
 
   # Transformation app paths
     /transformations:
+        get:
+            description: Get the List of Simulations
+            operationId: getTransformationList
+            responses:
+                '200':
+                    description: Success
+                    content:
+                        application/json:
+                            schema:
+                                type: object
+                                properties:
+                                    items:
+                                        type: array
+                                        example: [SimulationID-1, Simulation-2, '...']
         post:
             description: Initialize a Transformation
             operationId: newTransformation
@@ -137,125 +151,220 @@ paths:
                             schema:
                                 type: string
                                 example: Stopped successfully
-    /:
+
+  # dataSource endpoints
+    /results:
         get:
-            description: Get the List of Simulations
-            operationId: getTransformationList
+            summary: Get a simulation's result
+            operationId: getDataset
+            requestBody:
+                content:
+                    application/json:
+                        schema:
+                            $ref: '#/components/schemas/DatasetQuery'
+                required: true
             responses:
                 '200':
-                    description: Success
+                    description: Successful Response
+                    content:
+                        - vnd.sintef.dlite+json
+                '422':
+                    description: Validation Error
                     content:
                         application/json:
                             schema:
-                                type: object
-                                properties:
-                                    items:
-                                        type: array
-                                        example: [SimulationID-1, Simulation-2, '...']
-
-  # dataSource endpoints
-    /datasets:
-        get:
-            description: Get the simulation results (DLite json)
-            operationId: getDataset
-            parameters:
-                - in: query
-                  name: dataset_name
-                  schema:
-                      type: string
-                  required: true
-            responses:
-                '200':
-                    description: Success
-                    content:
-                        '*/*':
-                            schema:
-                                type: object
-                '404':
-                    description: Not found
-                    content:
-                        resourceId:
-                            schema:
-                                type: string
-                                example: Simulation not found
-                '400':
-                    description: Bad Request
-                    content:
-                        resourceId:
-                            schema:
-                                type: string
-                                example: Simulation is in progress
-
+                                $ref: '#/components/schemas/HTTPValidationError'
     /mappings:
         get:
-            description: Get the list semantic mappings
+            summary: Get a list of the available mappings
             operationId: listSemanticMappings
             responses:
                 '200':
-                    description: Success
+                    description: Successful Response
                     content:
-                        '*/*':
-                            schema:
-                                type: object
-
+                        application/json:
+                            schema: {}
     /mappings/{semantic_mapping_id}:
         get:
-            description: Get a specific semantic mapping set
+            summary: Get a specific mapping
             operationId: getSemanticMapping
             parameters:
-                - in: path
-                  name: semantic_mapping_id
+                - required: true
                   schema:
+                      title: Semantic Mapping Id
                       type: string
+                  name: semantic_mapping_id
+                  in: path
             responses:
                 '200':
-                    description: Success
+                    description: Successful Response
                     content:
-                        '*/*':
-                            schema:
-                                type: object
-                '404':
-                    description: Not found
+                        application/json:
+                            schema: {}
+                '422':
+                    description: Validation Error
                     content:
-                        resourceId:
+                        application/json:
                             schema:
-                                type: string
-                                example: Semantic mapping Not found
-
+                                $ref: '#/components/schemas/HTTPValidationError'
 components:
     schemas:
-        TransformationConfig:
-            title: TransformationConfig
+        DatasetQuery:
+            title: DatasetQuery
             required:
-                - Configuration
+                - collection_name
+                - dataset_name
             type: object
             properties:
-                laserStrength:
-                    title: laserStrength
-                    type: integer
+                collection_name:
+                    title: Collection Name
+                    maxLength: 255
+                    minLength: 1
+                    type: string
+                dataset_name:
+                    title: Dataset Name
+                    minLength: 1
+                    type: string
+        HTTPValidationError:
+            title: HTTPValidationError
+            type: object
+            properties:
+                detail:
+                    title: Detail
+                    type: array
+                    items:
+                        $ref: '#/components/schemas/ValidationError'
+        TransformationCreateResponse:
+            title: TransformationCreateResponse
+            required:
+                - id
+            type: object
+            properties:
+                id:
+                    title: Id
+                    type: string
+                    format: uuid4
+        TransformationInput:
+            title: TransformationInput
+            type: object
+            properties:
+                laserPower:
+                    title: Laserpower
+                    type: number
+                    default: 150
                 laserSpeed:
-                    title: laserSpeed
+                    title: Laserspeed
                     type: number
-                configuration:
-                    title: Configuration
-                    type: integer
+                    default: 3
                 sphereDiameter:
-                    title: sphereDiameter
+                    title: Spherediameter
                     type: number
+                    default: 3.0e-05
                 phi:
-                    title: phi
+                    title: Phi
                     type: number
+                    default: 0.7
                 powderLayerHeight:
-                    title: powderLayerHeight
+                    title: Powderlayerheight
                     type: number
-            description: Transformation data model
-        TransformationUpdate:
-            title: TransformationUpdate
+                    default: 6.0e-05
+        TransformationListResponse:
+            title: TransformationListResponse
+            required:
+                - items
+            type: object
+            properties:
+                items:
+                    title: Items
+                    type: array
+                    items:
+                        $ref: '#/components/schemas/TransformationModel'
+        TransformationModel:
+            title: TransformationModel
+            required:
+                - id
+                - parameters
+            type: object
+            properties:
+                id:
+                    title: Id
+                    type: string
+                    format: uuid4
+                parameters:
+                    title: Parameters
+                    type: object
+                state:
+                    $ref: '#/components/schemas/TransformationState'
+        TransformationState:
+            title: TransformationState
+            enum:
+                - CREATED
+                - RUNNING
+                - STOPPED
+                - COMPLETED
+                - FAILED
+            type: string
+            description: An enumeration.
+        TransformationStateResponse:
+            title: TransformationStateResponse
+            required:
+                - id
+                - state
+            type: object
+            properties:
+                id:
+                    title: Id
+                    type: string
+                    format: uuid4
+                state:
+                    $ref: '#/components/schemas/TransformationState'
+        TransformationUpdateModel:
+            title: TransformationUpdateModel
             required:
                 - state
             type: object
             properties:
                 state:
-                    title: state
+                    title: State
+                    enum:
+                        - RUNNING
+                        - STOPPED
                     type: string
-            description: Transformation update model
+        TransformationUpdateResponse:
+            title: TransformationUpdateResponse
+            required:
+                - id
+                - state
+            type: object
+            properties:
+                id:
+                    title: Id
+                    type: string
+                    format: uuid4
+                state:
+                    title: State
+                    enum:
+                        - RUNNING
+                        - STOPPED
+                    type: string
+        ValidationError:
+            title: ValidationError
+            required:
+                - loc
+                - msg
+                - type
+            type: object
+            properties:
+                loc:
+                    title: Location
+                    type: array
+                    items:
+                        anyOf:
+                            - type: string
+                            - type: integer
+                msg:
+                    title: Message
+                    type: string
+                type:
+                    title: Error Type
+                    type: string
