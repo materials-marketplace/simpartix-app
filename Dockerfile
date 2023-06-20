@@ -1,4 +1,4 @@
-FROM hub.cc-asp.fraunhofer.de/simpartixpublic/simpartix:03
+FROM hub.cc-asp.fraunhofer.de/simpartixpublic/simpartix:04
 
 # add source code from the repository that includes all source files
 ADD simpartix /source
