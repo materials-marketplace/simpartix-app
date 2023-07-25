@@ -2,7 +2,8 @@
 
 
 class SimPARTIXOutput:
-    def __init__(self, temperature, group, state_of_matter):
+    def __init__(self, temperature, group, state_of_matter, times):
+        self.times = times
         self.temperature = temperature
         self.group = group
         self.state_of_matter = state_of_matter
