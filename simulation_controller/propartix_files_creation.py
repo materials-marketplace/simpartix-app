@@ -197,6 +197,7 @@ def create_input_files(foldername: str, simulation_input: TransformationInput):
 def get_output_values(basePath: str) -> dict:
     vtk_path = create_micress_files(basePath)
     result = px.vtkToDlite(vtk_path)
+    result["times"] = px.getH5PartTime(filename=os.path.join(basePath, "output", "output.h5part"), allFrames=True)
     return result
 
 
