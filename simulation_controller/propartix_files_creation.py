@@ -196,8 +196,20 @@ def create_input_files(foldername: str, simulation_input: TransformationInput):
 
 def get_output_values(basePath: str) -> dict:
     vtk_path = create_micress_files(basePath)
-    result = px.vtkToDlite(vtk_path)
+    result   = create_results_dict_with_meta_data(uuid = 'dummy',
+                    meta = "http://onto-ns.com/meta/0.0.1/SimPARTIXOutput" )
+    times = px.getH5PartTime(filename=os.path.join(basePath, "output", "output.h5part"), allFrames = True)
+    result['property']['time'] = times
+    for i in range(len(times)):
+        px.vtkToDlite(os.path.join(vtk_path, f"frame_{i:04d}.vtk"), result)
     return result
+
+def create_results_dict_with_meta_data(**kwargs) -> dict:
+    result_dic = {}
+    for key, value in kwargs.items():
+        result_dic[key] = value
+    result_dic['properties'] = {}
+    return result_dic
 
 
 def create_micress_files(basePath: str) -> list:
