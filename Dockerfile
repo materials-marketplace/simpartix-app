@@ -1,4 +1,4 @@
-FROM hub.cc-asp.fraunhofer.de/simpartixpublic/simpartix:04
+FROM hub.cc-asp.fraunhofer.de/simpartixpublic/simpartix:05
 
 # add source code from the repository that includes all source files
 ADD simpartix /source
@@ -12,13 +12,13 @@ ENV PROPARTIXPATH "/source/ProPARTIX/code"
 WORKDIR /app
 # To store the files from the simulations
 RUN mkdir simulation_files
+ADD requirements.txt  .
+RUN pip install -r requirements.txt
 ADD models ./models
 ADD simpartix  ./simpartix
 ADD simulation_controller ./simulation_controller
 ADD static ./static
-ADD requirements.txt  .
 ADD app.py .
-RUN pip install -r requirements.txt
 
 
 CMD ["uvicorn", "app:app", "--host", "0.0.0.0", "--port", "8000"]

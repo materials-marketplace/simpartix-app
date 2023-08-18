@@ -196,28 +196,22 @@ def create_input_files(foldername: str, simulation_input: TransformationInput):
 
 def get_output_values(basePath: str) -> dict:
     vtk_path = create_micress_files(basePath)
-    result   = create_results_dict_with_meta_data(uuid = 'dummy',
-                    meta = "http://onto-ns.com/meta/0.0.1/SimPARTIXOutput" )
-    times = px.getH5PartTime(filename=os.path.join(basePath, "output", "output.h5part"), allFrames = True)
-    result['property']['time'] = times
-    for i in range(len(times)):
+
+    elapsed_time = px.getH5PartTime(
+        filename=os.path.join(basePath, "output", "output.h5part"),
+        allFrames=True,
+    )
+    result = {"elapsed_time": elapsed_time}
+    for i in range(len(elapsed_time)):
         px.vtkToDlite(os.path.join(vtk_path, f"frame_{i:04d}.vtk"), result)
     return result
-
-def create_results_dict_with_meta_data(**kwargs) -> dict:
-    result_dic = {}
-    for key, value in kwargs.items():
-        result_dic[key] = value
-    result_dic['properties'] = {}
-    return result_dic
 
 
 def create_micress_files(basePath: str) -> list:
     micress_path = os.path.join(basePath, "micress")
     output_path = os.path.join(basePath, "output", "output.h5part")
     vtk_path = os.path.join(micress_path, "frame_%04d.vtk")
-    frame = px.getH5PartFrames(output_path) - 1
-    file_path = os.path.join(micress_path, f"frame_{frame:04n}.vtk")
+    # frame = px.getH5PartFrames(output_path) - 1
     if not os.path.isdir(micress_path):
         os.mkdir(micress_path)
 
@@ -226,16 +220,16 @@ def create_micress_files(basePath: str) -> list:
     upperCorner = px.getH5PartBoxDimensions(output_path, frame=0)[1]
 
     # Micress asked for a single slice, so reduce the conversion windows
-    xRange = (upperCorner[0] - lowerCorner[0]) / 8.0
-    lowerCorner[0] = -xRange
-    upperCorner[0] = xRange
+    # xRange = (upperCorner[0] - lowerCorner[0]) / 8.0
+    # lowerCorner[0] = -xRange
+    # upperCorner[0] = xRange
 
     # initiate conversion from h5part to vtk
     px.h5partToVtk(
         h5partFilename=output_path,
         vtkPattern=vtk_path,
         isVtkTypeCellData=True,
-        frames=[frame],
+        # frames=[0, 1],
         lowerCorner=lowerCorner,
         upperCorner=upperCorner,
         makeAverage=False,
@@ -253,7 +247,7 @@ def create_micress_files(basePath: str) -> list:
         micressSubstrateThreshold=0,
         micressLiquidThreshold=1,
     )
-    return file_path
+    return micress_path
 
 
 def generate_preview(basepath: str):

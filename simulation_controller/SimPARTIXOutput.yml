@@ -1,0 +1,34 @@
+---
+version: 0.0.1
+uri: http://onto-ns.com/meta/0.0.1/SimPARTIXOutput
+description: Output of a SimPARTIX melt pool simulation (MarketPlace UC1).
+dimensions:
+    X: Number of cells in x direction.
+    Z: Number of cells in z direction.
+    time: Timesteps.
+properties:
+    id:
+        type: string
+        description: unique identifier for the transformation
+    elapsed_time:
+    # TBD what it should be linked to
+        type: float
+        unit: seconds
+        shape: [time]
+        description: Physical time of each snapshot.
+    temperature:
+    # needs to be linked to -> ThermodynamicTemperature, http://emmo.info/emmo#EMMO_affe07e4_e9bc_4852_86c6_69e26182a17f
+        type: float
+        unit: Kelvin
+        shape: [time, X, Z]
+        description: List of temperature cells.
+    group:
+    # probably needs a new entity, for now we can use Index, http://emmo.info/emmo#EMMO_0cd58641_824c_4851_907f_f4c3be76630c
+        type: int
+        shape: [time, X, Z]
+        description: List of group (i.e. grain) cells.
+    state_of_matter:
+    # needs to be linked to -> StateOfMatter, http://emmo.info/emmo#EMMO_b9695e87_8261_412e_83cd_a86459426a28
+        type: float
+        shape: [time, X, Z]
+        description: List of state of matter (i.e. phase) cells.

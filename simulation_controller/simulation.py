@@ -54,7 +54,7 @@ class Simulation:
                 logging.info(f"Simulation '{self.job_id}' is now completed.")
                 self.status = TransformationState.COMPLETED
             else:
-                logging.error(f"Error occured in simulation '{self.job_id}'.")
+                logging.error(f"Error occurred in simulation '{self.job_id}'.")
                 self.status = TransformationState.FAILED
         return self._status
 
@@ -119,14 +119,6 @@ class Simulation:
                         semantic mapping for the data
                         mimetype of the data
         """
-        result = get_output_values(self.simulationPath)
-
-        path = os.path.join(
-            os.path.dirname(os.path.abspath(__file__)), "SimPARTIXOutput.json"
-        )
-        DLiteSimPARTIXOutput = dlite.classfactory(
-            SimPARTIXOutput, url=f"json://{path}"
-        )
         if self.status in (
             TransformationState.RUNNING,
             TransformationState.CREATED,
@@ -137,7 +129,16 @@ class Simulation:
             )
             logging.error(msg)
             raise RuntimeError(msg)
+        result = get_output_values(self.simulationPath)
+        path = os.path.join(
+            os.path.dirname(os.path.abspath(__file__)), "SimPARTIXOutput.yml"
+        )
+        DLiteSimPARTIXOutput = dlite.classfactory(
+            SimPARTIXOutput, url=f"yaml://{path}"
+        )
         simpartix_output = DLiteSimPARTIXOutput(
+            id=self.job_id,
+            elapsed_time=result["elapsed_time"],
             temperature=result["Temperature_SPH"],
             group=result["Group"],
             state_of_matter=result["StateOfMatter_SPH"],
