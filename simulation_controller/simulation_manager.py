@@ -10,6 +10,8 @@ mappings = {
     "SimpartixOutput": {
         "name": "SimpartixOutput",
         "properties": {
+            # TODO: Add mapping for the elapsed_time
+            "elapsed_time": "tbd",
             "temperature": "http://emmo.info/emmo#EMMO_affe07e4_e9bc_4852_86c6_69e26182a17f",
             "group": "http://emmo.info/emmo#EMMO_0cd58641_824c_4851_907f_f4c3be76630c",
             "state_of_matter": "http://emmo.info/emmo#EMMO_b9695e87_8261_412e_83cd_a86459426a28",
