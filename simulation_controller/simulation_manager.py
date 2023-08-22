@@ -1,4 +1,6 @@
 import logging
+import threading
+import time
 
 from marketplace_standard_app_api.models.transformation import (
     TransformationState,
@@ -22,7 +24,19 @@ mappings = {
 
 class SimulationManager:
     def __init__(self):
-        self.simulations: dict = {}
+        self.simulations: dict[str, Simulation] = {}
+        self._check_statuses_background()
+
+    def _check_statuses_background(self):
+        def _check_statuses():
+            while True:
+                for simulation in self.simulations.values():
+                    _ = simulation.status
+                    # print(f"{simulation.id}: {simulation.status}")
+                time.sleep(20)
+
+        status_thread = threading.Thread(target=_check_statuses)
+        status_thread.start()
 
     def _get_simulation(self, job_id: str) -> Simulation:
         """
@@ -54,7 +68,7 @@ class SimulationManager:
         Returns:
             str: ID of the added object
         """
-        job_id: str = simulation.job_id
+        job_id: str = simulation.id
         self.simulations[job_id] = simulation
         return job_id
 
