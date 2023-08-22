@@ -1,9 +1,13 @@
+import asyncio
+import enum
+import json
 import logging
 import os
 import shutil
 import subprocess
+import threading
+import time
 import uuid
-from typing import Tuple
 
 import dlite
 from marketplace_standard_app_api.models.transformation import (
@@ -20,20 +24,25 @@ from simulation_controller.simpartix_output import SimPARTIXOutput
 SIMULATIONS_FOLDER_PATH = "/app/simulation_files"
 
 
+class OutputStatus(enum.Enum):
+    MISSING = 0
+    COMPUTING = 1
+    READY = 2
+
+
 class Simulation:
     """Manage a single simulation."""
 
     def __init__(self, simulation_input: TransformationInput):
-        self.job_id: str = str(uuid.uuid4())
-        self.simulationPath = os.path.join(
-            SIMULATIONS_FOLDER_PATH, self.job_id
-        )
+        self.id: str = str(uuid.uuid4())
+        self.simulationPath = os.path.join(SIMULATIONS_FOLDER_PATH, self.id)
         create_input_files(self.simulationPath, simulation_input)
         self.parameters = simulation_input
         self._status: TransformationState = TransformationState.CREATED
         self._process = None
+        self.output_status = OutputStatus.MISSING
         logging.info(
-            f"Simulation '{self.job_id}' with "
+            f"Simulation '{self.id}' with "
             f"configuration {simulation_input} created."
         )
 
@@ -51,10 +60,15 @@ class Simulation:
             if process_status is None:
                 return TransformationState.RUNNING
             elif process_status == 0:
-                logging.info(f"Simulation '{self.job_id}' is now completed.")
-                self.status = TransformationState.COMPLETED
+                logging.info(f"Simulation '{self.id}' is completed.")
+                if self.output_status == OutputStatus.MISSING:
+                    logging.info(f"Preparing output for simulation {self.id}")
+                    self.output_status = OutputStatus.COMPUTING
+                    asyncio.run(self._prepare_output())
+                elif self.output_status == OutputStatus.READY:
+                    self.status = TransformationState.COMPLETED
             else:
-                logging.error(f"Error occurred in simulation '{self.job_id}'.")
+                logging.error(f"Error occurred in simulation '{self.id}'.")
                 self.status = TransformationState.FAILED
         return self._status
 
@@ -81,7 +95,7 @@ class Simulation:
             RuntimeError: when the simulation is already in progress
         """
         if self.status == TransformationState.RUNNING:
-            msg = f"Simulation '{self.job_id}' already in progress."
+            msg = f"Simulation '{self.id}' already in progress."
             logging.error(msg)
             raise RuntimeError(msg)
         outputPath = os.path.join(self.simulationPath, "output")
@@ -90,7 +104,72 @@ class Simulation:
         os.chdir(self.simulationPath)
         self.process = subprocess.Popen(["SimPARTIX"], stdout=subprocess.PIPE)
         self.status = TransformationState.RUNNING
-        logging.info(f"Simulation '{self.job_id}' started successfully.")
+        logging.info(f"Simulation '{self.id}' started successfully.")
+        self._update_status()
+
+    def _update_status(self) -> None:
+        """Utility function that periodically triggers the status check.
+
+        The purpose of this function is to generate the output files without
+        having to wait for a request from the user. It is only relevant for
+        running simulations, to know when they are done.
+        """
+
+        def _check_status():
+            while self.status != TransformationState.COMPLETED:
+                # print(f"{self.id}: {self.status}")
+                time.sleep(10)
+
+        status_thread = threading.Thread(target=_check_status)
+        status_thread.start()
+
+    async def _prepare_output(self) -> None:
+        """
+        Prepares the DLite output based on the generated vtk files.
+
+        This method should be called once the simulation is done running.
+        It will update the output_ready flag to show it is ready for the user.
+        """
+        logging.info(f"Preparing output for simulation '{self.id}'.")
+        result = get_output_values(self.simulationPath)
+        dlite_schema_path = os.path.join(
+            os.path.dirname(os.path.abspath(__file__)), "SimPARTIXOutput.yml"
+        )
+        DLiteSimPARTIXOutput = dlite.classfactory(
+            SimPARTIXOutput, url=f"yaml://{dlite_schema_path}"
+        )
+        simpartix_output = DLiteSimPARTIXOutput(
+            id=self.id,
+            elapsed_time=result["elapsed_time"],
+            temperature=result["Temperature_SPH"],
+            group=result["Group"],
+            state_of_matter=result["StateOfMatter_SPH"],
+        )
+        output_path = os.path.join(self.simulationPath, "output")
+        simpartix_output.dlite_inst.save(f"json://{output_path}.json?mode=w")
+        self.output_status = OutputStatus.READY
+
+    def get_output(self) -> str:
+        """Get the output of a simulation
+
+        Raises:
+            RuntimeError: If the simulation has not finished
+
+        Returns:
+            str: data in json format
+        """
+        if self.output_status != OutputStatus.READY:
+            msg = (
+                f"Cannot download, simulation '{self.id}' "
+                f"has status '{self.status.name}'."
+            )
+            logging.error(msg)
+            raise RuntimeError(msg)
+
+        file_path = os.path.join(self.simulationPath, "output.json")
+        with open(file_path) as f:
+            output = json.load(f)
+            return output
 
     def stop(self):
         """Stop a running process.
@@ -99,54 +178,14 @@ class Simulation:
             RuntimeError: if the simulation is not running
         """
         if self.process is None:
-            msg = f"No process to stop. Is simulation '{self.job_id}' running?"
+            msg = f"No process to stop. Is simulation '{self.id}' running?"
 
             logging.error(msg)
             raise RuntimeError(msg)
         self.process.terminate()
         self.status = TransformationState.STOPPED
         self.process = None
-        logging.info(f"Simulation '{self.job_id}' stopped successfully.")
-
-    def get_output(self) -> Tuple[str]:
-        """Get the output of a simulation
-
-        Raises:
-            RuntimeError: If the simulation has not run
-
-        Returns:
-            Tuple[str]: data in json format
-                        semantic mapping for the data
-                        mimetype of the data
-        """
-        if self.status in (
-            TransformationState.RUNNING,
-            TransformationState.CREATED,
-        ):
-            msg = (
-                f"Cannot download, simulation '{self.job_id}' "
-                f"has status '{self.status.name}'."
-            )
-            logging.error(msg)
-            raise RuntimeError(msg)
-        result = get_output_values(self.simulationPath)
-        path = os.path.join(
-            os.path.dirname(os.path.abspath(__file__)), "SimPARTIXOutput.yml"
-        )
-        DLiteSimPARTIXOutput = dlite.classfactory(
-            SimPARTIXOutput, url=f"yaml://{path}"
-        )
-        simpartix_output = DLiteSimPARTIXOutput(
-            id=self.job_id,
-            elapsed_time=result["elapsed_time"],
-            temperature=result["Temperature_SPH"],
-            group=result["Group"],
-            state_of_matter=result["StateOfMatter_SPH"],
-        )
-        # Store the output as a file for posterity
-        file_path = os.path.join(self.simulationPath, self.job_id)
-        simpartix_output.dlite_inst.save(f"json://{file_path}.json?mode=w")
-        return simpartix_output.dlite_inst.asjson()
+        logging.info(f"Simulation '{self.id}' stopped successfully.")
 
     def delete(self):
         """
@@ -156,8 +195,8 @@ class Simulation:
             RuntimeError: if deleting a running simulation
         """
         if self.status == TransformationState.RUNNING:
-            msg = f"Simulation '{self.job_id}' is running."
+            msg = f"Simulation '{self.id}' is running."
             logging.error(msg)
             raise RuntimeError(msg)
         shutil.rmtree(self.simulationPath)
-        logging.info(f"Simulation '{self.job_id}' and related files deleted.")
+        logging.info(f"Simulation '{self.id}' and related files deleted.")
