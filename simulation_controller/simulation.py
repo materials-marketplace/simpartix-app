@@ -5,8 +5,9 @@ import logging
 import os
 import shutil
 import subprocess
+import threading
+import time
 import uuid
-from typing import Tuple
 
 import dlite
 from marketplace_standard_app_api.models.transformation import (
@@ -104,6 +105,23 @@ class Simulation:
         self.process = subprocess.Popen(["SimPARTIX"], stdout=subprocess.PIPE)
         self.status = TransformationState.RUNNING
         logging.info(f"Simulation '{self.id}' started successfully.")
+        self._update_status()
+
+    def _update_status(self) -> None:
+        """Utility function that periodically triggers the status check.
+
+        The purpose of this function is to generate the output files without
+        having to wait for a request from the user. It is only relevant for
+        running simulations, to know when they are done.
+        """
+
+        def _check_status():
+            while self.status != TransformationState.COMPLETED:
+                # print(f"{self.id}: {self.status}")
+                time.sleep(10)
+
+        status_thread = threading.Thread(target=_check_status)
+        status_thread.start()
 
     async def _prepare_output(self) -> None:
         """
