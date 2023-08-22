@@ -40,8 +40,8 @@ async def heartbeat():
 async def new_simulation(
     payload: TransformationInput,
 ) -> TransformationCreateResponse:
-    job_id = simulation_manager.create_simulation(payload)
-    return {"id": job_id}
+    id = simulation_manager.create_simulation(payload)
+    return {"id": id}
 
 
 @app.patch(
