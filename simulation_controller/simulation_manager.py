@@ -125,8 +125,24 @@ class SimulationManager:
         """
         return self._get_simulation(id).status
 
+    def get_simulation(self, id) -> dict:
+        """Return information of one simulation.
+
+        Args:
+            id (str): id of the simulation
+
+        Returns:
+            list: list of simulation ids
+        """
+        simulation = self.simulations[id]
+        return {
+            "id": simulation.id,
+            "parameters": simulation.parameters,
+            "state": simulation.status,
+        }
+
     def get_simulations(self) -> dict:
-        """Return unique ids of all the simulations.
+        """Return information of all simulations.
 
         Returns:
             list: list of simulation ids
