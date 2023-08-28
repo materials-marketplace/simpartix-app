@@ -21,7 +21,7 @@ def create_input_files(foldername: str, simulation_input: TransformationInput):
     particlesSPH = px.Particles("SPH")
 
     # particle spacing
-    dp = 1.0e-6
+    dp = 3.0e-6
     radiusScaling = 1.1
     substrateLayer = 30e-6
 
@@ -236,7 +236,7 @@ def create_micress_files(basePath: str) -> list:
         smoothingLength=None,
         particleSpacing=None,
         density=None,
-        resolution=1.3e-6,
+        resolution=3.9e-6,
         isEnforceEqualSpacing=True,
         isShepardFilter=True,
         quantitiesToBeMapped=["Group", "Temperature_SPH", "StateOfMatter_SPH"],
