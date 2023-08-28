@@ -7,6 +7,7 @@ from marketplace_standard_app_api.models.transformation import (
     TransformationCreateResponse,
     TransformationId,
     TransformationListResponse,
+    TransformationModel,
     TransformationStateResponse,
     TransformationUpdateModel,
     TransformationUpdateResponse,
@@ -42,6 +43,46 @@ async def new_simulation(
 ) -> TransformationCreateResponse:
     id = simulation_manager.create_simulation(payload)
     return {"id": id}
+
+
+@app.get(
+    "/transformations/{transformation_id}",
+    summary="Get a transformation",
+    response_model=TransformationModel,
+    operation_id="getTransformation",
+    responses={
+        404: {"description": "Not Found."},
+        400: {"description": "Error executing get operation"},
+    },
+)
+def get_simulation(transformation_id: TransformationId):
+    try:
+        return simulation_manager.get_simulation(str(transformation_id))
+    except KeyError as ke:
+        raise HTTPException(status_code=404, detail=ke)
+    except RuntimeError as re:
+        raise HTTPException(status_code=400, detail=re)
+
+
+@app.get(
+    "/transformations",
+    summary="Get all simulations.",
+    response_model=TransformationListResponse,
+    operation_id="getTransformationList",
+)
+def get_simulations():
+    try:
+        items: list = simulation_manager.get_simulations()
+
+        logging.info(f"simulations: {items}")
+        return {"items": items}
+    except Exception as e:
+        msg = (
+            "Unexpected error while fetching the list of simulations. "
+            f"Error message: {e}"
+        )
+        logging.error(msg)
+        return Response(msg, status=400)
 
 
 @app.patch(
@@ -90,7 +131,10 @@ def update_simulation_state(
     summary="Get the state of the simulation.",
     response_model=TransformationStateResponse,
     operation_id="getTransformationState",
-    responses={404: {"description": "Unknown simulation"}},
+    responses={
+        404: {"description": "Unknown simulation"},
+        400: {"description": "Error executing get operation"},
+    },
 )
 def get_simulation_state(
     transformation_id: TransformationId,
@@ -117,31 +161,14 @@ def get_simulation_state(
         raise HTTPException(status_code=400, detail=msg)
 
 
-@app.get(
-    "/transformations",
-    summary="Get all simulations.",
-    response_model=TransformationListResponse,
-    operation_id="getTransformationList",
-)
-def get_simulations():
-    try:
-        items: list = simulation_manager.get_simulations()
-
-        logging.info(f"simulations: {items}")
-        return {"items": items}
-    except Exception as e:
-        msg = (
-            "Unexpected error while fetching the list of simulations. "
-            f"Error message: {e}"
-        )
-        logging.error(msg)
-        return Response(msg, status=400)
-
-
 @app.delete(
     "/transformations/{transformation_id}",
     summary="Delete a transformation",
     operation_id="deleteTransformation",
+    responses={
+        404: {"description": "Unknown simulation"},
+        400: {"description": "Error executing delete operation"},
+    },
 )
 def delete_simulation(transformation_id: TransformationId):
     try:
@@ -191,6 +218,9 @@ def list_mappings():
     "/mappings/{semantic_mapping_id}",
     summary="Get a specific mapping",
     operation_id="getSemanticMapping",
+    responses={
+        404: {"description": "Unknown mapping"},
+    },
 )
 def get_mapping(semantic_mapping_id: str):
     mapping = json.dumps(mappings.get(semantic_mapping_id))

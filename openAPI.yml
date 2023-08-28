@@ -57,6 +57,34 @@ paths:
                             schema:
                                 $ref: '#/components/schemas/HTTPValidationError'
     /transformations/{transformation_id}:
+        get:
+            summary: Get a transformation
+            operationId: getTransformation
+            parameters:
+                - required: true
+                  schema:
+                      title: Transformation Id
+                      type: string
+                      format: uuid4
+                  name: transformation_id
+                  in: path
+            responses:
+                '200':
+                    description: Successful Response
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/TransformationModel'
+                '400':
+                    description: Error executing get operation
+                '404':
+                    description: Not Found.
+                '422':
+                    description: Validation Error
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/HTTPValidationError'
         delete:
             summary: Delete a transformation
             operationId: deleteTransformation
@@ -74,6 +102,10 @@ paths:
                     content:
                         application/json:
                             schema: {}
+                '400':
+                    description: Error executing delete operation
+                '404':
+                    description: Unknown simulation
                 '422':
                     description: Validation Error
                     content:
@@ -143,6 +175,8 @@ paths:
                         application/json:
                             schema:
                                 $ref: '#/components/schemas/TransformationStateResponse'
+                '400':
+                    description: Error executing get operation
                 '404':
                     description: Unknown simulation
                 '422':
@@ -209,6 +243,8 @@ paths:
                     content:
                         application/json:
                             schema: {}
+                '404':
+                    description: Unknown mapping
                 '422':
                     description: Validation Error
                     content:
