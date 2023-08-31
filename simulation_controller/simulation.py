@@ -105,9 +105,9 @@ class Simulation:
         self.process = subprocess.Popen(["SimPARTIX"], stdout=subprocess.PIPE)
         self.status = TransformationState.RUNNING
         logging.info(f"Simulation '{self.id}' started successfully.")
-        self._update_status()
+        self._refresh_status()
 
-    def _update_status(self) -> None:
+    def _refresh_status(self) -> None:
         """Utility function that periodically triggers the status check.
 
         The purpose of this function is to generate the output files without

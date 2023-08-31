@@ -59,9 +59,9 @@ def get_simulation(transformation_id: TransformationId):
     try:
         return simulation_manager.get_simulation(str(transformation_id))
     except KeyError as ke:
-        raise HTTPException(status_code=404, detail=ke)
+        raise HTTPException(status_code=404, detail=str(ke))
     except RuntimeError as re:
-        raise HTTPException(status_code=400, detail=re)
+        raise HTTPException(status_code=400, detail=str(re))
 
 
 @app.get(
@@ -116,7 +116,7 @@ def update_simulation_state(
         )
 
     except RuntimeError as re:
-        raise HTTPException(status_code=409, detail=re)
+        raise HTTPException(status_code=409, detail=str(re))
     except Exception as e:
         msg = (
             "Unexpected error while changing state of simulation "
@@ -178,9 +178,9 @@ def delete_simulation(transformation_id: TransformationId):
         }
 
     except KeyError as ke:
-        raise HTTPException(status_code=404, detail=ke)
+        raise HTTPException(status_code=404, detail=str(ke))
     except RuntimeError as re:
-        raise HTTPException(status_code=400, detail=re)
+        raise HTTPException(status_code=400, detail=str(re))
     except Exception as e:
         msg = (
             "Unexpected error while deleting simulation "
