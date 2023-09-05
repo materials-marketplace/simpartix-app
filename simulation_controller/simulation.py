@@ -1,4 +1,3 @@
-import asyncio
 import enum
 import json
 import logging
@@ -56,20 +55,23 @@ class Simulation:
             TransformationState: status of the simulation
         """
         if self._status == TransformationState.RUNNING:
-            process_status = self.process.poll()
-            if process_status is None:
-                return TransformationState.RUNNING
-            elif process_status == 0:
-                logging.info(f"Simulation '{self.id}' is completed.")
-                if self.output_status == OutputStatus.MISSING:
-                    logging.info(f"Preparing output for simulation {self.id}")
+            if self.output_status == OutputStatus.MISSING:
+                process_status = self.process.poll()
+                if process_status is None:
+                    return TransformationState.RUNNING
+                elif process_status == 0:
+                    logging.info(
+                        f"Simulation '{self.id}' is finished computing."
+                    )
                     self.output_status = OutputStatus.COMPUTING
-                    asyncio.run(self._prepare_output())
-                elif self.output_status == OutputStatus.READY:
-                    self.status = TransformationState.COMPLETED
-            else:
-                logging.error(f"Error occurred in simulation '{self.id}'.")
-                self.status = TransformationState.FAILED
+                    threading.Thread(
+                        target=self._prepare_output, name=f"output_{self.id}"
+                    ).start()
+                else:
+                    logging.error(f"Error occurred in simulation '{self.id}'.")
+                    self.status = TransformationState.FAILED
+            elif self.output_status == OutputStatus.READY:
+                self.status = TransformationState.COMPLETED
         return self._status
 
     @status.setter
@@ -117,13 +119,14 @@ class Simulation:
 
         def _check_status():
             while self.status != TransformationState.COMPLETED:
-                # print(f"{self.id}: {self.status}")
-                time.sleep(10)
+                time.sleep(5)
 
-        status_thread = threading.Thread(target=_check_status)
+        status_thread = threading.Thread(
+            target=_check_status, name="status_checker"
+        )
         status_thread.start()
 
-    async def _prepare_output(self) -> None:
+    def _prepare_output(self) -> None:
         """
         Prepares the DLite output based on the generated vtk files.
 
@@ -131,6 +134,7 @@ class Simulation:
         It will update the output_ready flag to show it is ready for the user.
         """
         logging.info(f"Preparing output for simulation '{self.id}'.")
+        print(f"Preparing output for simulation '{self.id}'.", flush=True)
         result = get_output_values(self.simulationPath)
         dlite_schema_path = os.path.join(
             os.path.dirname(os.path.abspath(__file__)), "SimPARTIXOutput.yml"
