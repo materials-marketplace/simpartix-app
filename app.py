@@ -1,4 +1,5 @@
 """Simple app for the SimPARTIX simulation code."""
+
 import json
 import logging
 
